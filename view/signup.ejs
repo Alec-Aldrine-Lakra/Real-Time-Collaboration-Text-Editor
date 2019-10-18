@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <title>Registration Page</title>
+    <link href="../css/style.css" type="text/css" rel="stylesheet" media="screen,projection"/>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <style>
+      @media only screen and (max-width: 800px) {
+        /* For mobile phones: */
+        #foo{
+          margin-top: 8vh;
+          margin-left:7vh;
+          width: 80%;
+        }
+      }
+      @media only screen and (min-width: 801px) {
+        /* For mobile phones: */
+        #foo{
+          margin-top: 8vh !important;
+          margin-left:16% !important;
+          width: 66% !important;
+        }
+      }
+      body{
+        background-image: linear-gradient(to bottom right,#a8ff78, #78ffd6);
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <div class="card z-depth-3" id="foo">
+        <div class="card-content">
+          <span class="card-title center-align">Sign In</span>
+          <div class="divider"></div>
+            <% if(locals.err){ %>
+              <p class="red lighten-1 white-text">&nbsp;&nbsp;&nbsp;&nbsp;<%= err %><br></p>
+            <% } %>
+          <form action="/signup" method="post" onsubmit="return test()">
+            <div class="row">
+              <div class="input-field col s12 l6 m6">
+                <input id="fname" type="text" name="fname" class="validate" required autocomplete="off" autofocus="on" maxlength="20">
+                <label for="fname">First Name</label>
+              </div>
+              <div class="input-field col s12 l6 m6">
+                <input id="lname" type="text" name="lname" class="validate" required autocomplete="off" maxlength="20">
+                <label for="lname">Last Name</label>
+              </div>
+            </div>
+            <div class="row">
+              <div class="input-field col s12">
+                <input id="email" type="email" name="email" class="validate" required autocomplete="off"  maxlength="35">
+                <label for="email">Email</label>
+              </div>
+            </div>
+            <div class="row">
+              <div class="input-field col s12 l6 m6">
+                <input id="password1" type="password" name="password1" class="validate" required autocomplete="off" maxlength="16">
+                <label for="password1">Password</label>
+              </div>
+              <div class="input-field col s12 l6 m6">
+                <input id="password2" type="password" name="password2" class="validate" required autocomplete="off" maxlength="16">
+                <label for="password2">Confirm Password</label>
+              </div>
+            </div>
+            <div class="row">
+              <div class="col l8 m8 s8">
+                <a href="/login">Already A User ?</a>
+              </div>
+            </div>
+            <button class="btn waves-effect waves-light btn-large" type="submit" name="action">Submit
+               <i class="material-icons right">send</i>
+           </button>
+          </form>
+        </div>
+      </div>
+    </div>
+    <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js" integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
+    <script>
+      function test(){
+        let fn = document.getElementsByTagName('input')[0].value.trim();
+        let ln = document.getElementsByTagName('input')[1].value.trim();
+        let e = document.getElementsByTagName('input')[2].value.trim();
+        let p1 = document.getElementsByTagName('input')[3].value.trim();
+        let p2 = document.getElementsByTagName('input')[4].value.trim();
+        let strongRegex = new RegExp("^(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[_!@#\$%\^&\*])(?=.{8,16})");
+        if(e==''){
+          M.toast({html: 'Please Enter Your Email!', classes: 'rounded'});
+          return false;
+        }
+        else if(p1==''||p1!=p2||strongRegex.test(p2)==false||p2.length<8){
+          M.toast({html: 'Password must have [8-16] with atleast 1 capital, 1 small, 1 number and 1 special character!', classes: 'rounded'});
+          return false;
+        }
+        else if(fn==''){
+          M.toast({html: 'Please Enter Your First Name!', classes: 'rounded'});
+          return false;
+        }
+        else if(ln==''){
+          M.toast({html: 'Please Enter Your Last Name!', classes: 'rounded'});
+          return false;
+        }
+        return true;
+      }
+    </script>
+  </body>
+</html>

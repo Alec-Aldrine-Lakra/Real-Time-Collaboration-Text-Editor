@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <title>Login Page</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <style>
+      @media only screen and (max-width: 800px) {
+        /* For mobile phones: */
+        #foo{
+          margin-top: 12vh;
+          margin-left:8vh;
+          width: 80%;
+        }
+      }
+      @media only screen and (min-width: 801px) {
+        /* For Big screens: */
+        #foo{
+          margin-top: 15vh;
+          margin-left:20vw;
+          width: 45%;
+        }
+      }
+      body{
+        background-image: linear-gradient(to bottom right,#a8ff78, #78ffd6);
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <div class="card z-depth-3" id="foo">
+        <div class="card-content">
+          <span class="card-title center-align">Log In</span>
+          <div class="divider"></div>
+            <% if(locals.err){ %>
+              <p class="red lighten-1 white-text">&nbsp;&nbsp;&nbsp;&nbsp;<%= err %><br></p>
+            <% } %>
+          <form action="/login" method="post" onsubmit="return test()">
+            <div class="row">
+              <div class="input-field col s12">
+                <input id="email" type="email" name="email" class="validate" required autocomplete="off" autofocus="on">
+                <label for="email">Email</label>
+              </div>
+            </div>
+            <div class="row">
+              <div class="input-field col s12">
+                <input id="password" type="password" name="password" class="validate" required autocomplete="off">
+                <label for="password">Password</label>
+              </div>
+            </div>
+            <div class="row">
+              <div class="col l8 m8 s8">
+                <a href="/signup">Register A New Account ?</a>
+              </div>
+            </div>
+            <button class="btn waves-effect waves-light btn-large" type="submit" name="action">Submit
+               <i class="material-icons right">send</i>
+           </button>
+          </form>
+        </div>
+      </div>
+    </div>
+    <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js" integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
+    <script>
+      function test(){
+        let e = document.getElementsByTagName('input')[0].value.trim();
+        let p = document.getElementsByTagName('input')[1].value.trim();
+        if(e==''){
+          M.toast({html: 'Please Enter Your Email!', classes: 'rounded'});
+          return false;
+        }
+        else if(p==''){
+          M.toast({html: 'Please Enter Your Password!', classes: 'rounded'});
+          return false;
+        }
+        return true;
+      }
+    </script>
+  </body>
+</html>
