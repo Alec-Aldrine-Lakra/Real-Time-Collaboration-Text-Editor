@@ -7,8 +7,9 @@ let socket = io(socketUrl, {
     autoConnect: false
 })
 socket.on('connect', () => {
-    /*let text = document.getElementById('text').getAttribute('name');
-    socket.emit('user',text);*/
+    let name = document.getElementById('firepad').getAttribute('name');
+    let id = document.getElementsByTagName('input')[0].getAttribute('id');
+    socket.emit('user',{name, id});
     console.log('Connected');
 })
 /*socket.on('content',message=>{ //getting data from previously created doc

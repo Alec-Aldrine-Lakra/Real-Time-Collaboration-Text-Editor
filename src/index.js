@@ -15,13 +15,6 @@ const mongoose = require('mongoose');
 const mongoDB = creds.db_uri;
 mongoose.connect(mongoDB, { useNewUrlParser: true, useUnifiedTopology: true, useCreateIndex: true});
 
-//Share DB and ShareDB adapter for mongo
-/*const shareDB = require('sharedb');
-shareDB.types.register(require('rich-text').type);
-let shareServer = new shareDB({
-  db: require('sharedb-mongo')(mongoDB)
-}); */
-
 app.set('view engine','ejs');
 app.set('views',path.join(__dirname,'../view'));
 app.use(express.static(path.join(__dirname,'../public')));
@@ -29,24 +22,15 @@ app.use(require(path.join(__dirname,'../controller/account')))
 
 io.on('connection',(socket)=>{
     console.log(`User connected To Socket Id: ${socket.id}`);
-    socket.on('user',name=>{ //Adding the new user to online database
-        let u = new Online({fname : name, sid: socket.id});
-        u.save(err=>{
-            if(err)
-              console.log(err);
-            else
-                emitEverywhere();
-        })
+    socket.on('user',async (ob)=>{ //Adding the new user to online database
+        let user = new Online({uid: ob.id, fname : ob.name, sid: socket.id});
+        await user.save();
+        emitEverywhere();
     })
-    socket.on('disconnect',()=>{
-       /* Online.deleteOne({sid : socket.id}).then(res=>{ //deleting the user from the database 
-            if(res.deletedCount==1){
-                console.log(`Connection Disconnected`);
-                emitEverywhere();
-            }
-        }).catch(err=>{
-            console.log(err);
-        })*/
+    socket.on('disconnect',async ()=>{
+       let d = await Online.deleteOne({sid : socket.id});
+       console.log(d);
+       emitEverywhere();
     })
     /*socket.on('message',async (m,fname,fn)=>{ //fetching data to all other users connected
         let s={}; //removing div and br tags 
@@ -103,14 +87,11 @@ io.on('connection',(socket)=>{
     })
 });
 
-const emitEverywhere = ()=>{
-    Online.find({},{_id:0,sid:0},(err,result)=>{
-        if(err)
-            console.log(err);
-        else
-            io.emit('users',result);
-    })
+const emitEverywhere = async ()=>{
+    let users = await Online.find({},{_id:0,uid:1,fname:1})
+    console.log(users);
 }
+
 const emitLogs= async (did)=>{
     let ls = await Logs.find({did},{_id:0,uid:1,sub_content:1});
     let p=[], r = new RegExp('</*[a-zA-Z]*>','g'); //removing tags from the actual sub-content to display in log
