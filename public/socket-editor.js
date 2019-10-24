@@ -1,4 +1,5 @@
 'use strict';
+var marker;
 $(function () {
     $('[data-toggle="tooltip"]').tooltip()
 })
@@ -8,29 +9,11 @@ let socket = io(socketUrl, {
 })
 socket.on('connect', () => {
     let name = document.getElementById('firepad').getAttribute('name');
-    let id = document.getElementsByTagName('input')[0].getAttribute('id');
+    let id =  document.getElementById('firepad').getAttribute('uid');
     socket.emit('user',{name, id});
     console.log('Connected');
 })
-/*socket.on('content',message=>{ //getting data from previously created doc
-    document.getElementById('text').setAttribute('contenteditable',true);
-    document.getElementById('text').innerHTML = message;
-})
-socket.on('message',(message,name,fn)=>{ //display message
-    clearTimeout(t);
-    document.getElementsByTagName('input')[0].value = fn;
-    document.getElementById('text').setAttribute('contenteditable',true);
-    document.getElementById('text').innerHTML = message;
-    document.getElementById('text').setAttribute('title',`${name} typing...`);
-    document.getElementById('text').setAttribute('data-original-title',`${name} typing...`);
-    $('#text').tooltip({trigger:'manual'}).tooltip('show');
-    addLines(document.getElementById('text'));
-    t = setTimeout(()=>{
-        document.getElementById('text').setAttribute('title',``);
-        document.getElementById('text').setAttribute('data-original-title',``);
-        $('#text').tooltip({trigger:'manual'}).tooltip('hide');
-    },1500);
-})
+
 socket.on('users',result=>{   //display online users                
     let e = document.getElementById('users'); //Remove pre-existing nodes 
     let child = e.lastElementChild;  
@@ -38,41 +21,47 @@ socket.on('users',result=>{   //display online users
         e.removeChild(child); 
         child = e.lastElementChild; 
     } 
-    let text = document.getElementById('text').getAttribute('name');
+    let id = document.getElementById('firepad').getAttribute('uid');
     for(let i=0; i< result.length; i++){ //update nodes
-        if(result[i].fname===text)
+        if(result[i].uid==id)
             continue;
         let l = document.createElement('li');
+        l.setAttribute('id',result[i].uid);
         let n = document.createTextNode(result[i].fname);
         l.appendChild(n);
         document.getElementById('users').appendChild(l);
     }
 })
-socket.on('logs',data=>{ //create logs
-    let e = document.getElementById('logs'); //Remove pre-existing nodes 
-    let child = e.lastElementChild;  
-    while (child) { 
-        e.removeChild(child); 
-        child = e.lastElementChild; 
-    }
-    for(let i=0; i< data.length; i++){ //update nodes
-        let l = document.createElement('li');
-        l.setAttribute('class','text-justify');
-        let n = document.createTextNode(data[i].name+ ' - ' + `"${data[i].content}"`);
-        l.appendChild(n);
-        document.getElementById('logs').appendChild(l);
-    }
-})*/
 
 socket.on('doc',id=>{
     config(id); //creating a new file in firebase named object id of the doc
 })
-socket.on('err', message=>{
+
+socket.on('message', message=>{
     document.getElementsByTagName('button')[2].disabled=true;
     document.getElementsByTagName('button')[1].disabled=false;
     document.getElementsByTagName('button')[0].disabled=false;
     alert(message);
 })
+
+socket.on('co-ordinates', (cursor)=>{
+    console.log('Clicked');
+    if(marker)
+        marker.clear();
+    let {cursorPos, name} = cursor;
+    const cursorElement = document.createElement('span');
+    cursorElement.appendChild(document.createTextNode(name));
+    cursorElement.style.backgroundColor = 'black';
+    cursorElement.style.color = 'white';
+    cursorElement.setAttribute('name',name);
+    cursorElement.style.zIndex = 3;
+    cursorElement.style.padding = '3px';
+    // Set the generated DOM node at the position of the cursor sent from another client
+    // setBookmark first argument: The position of the cursor sent from another client
+    // Second argument widget: Generated DOM node
+    marker = codeMirror.setBookmark(cursorPos, { widget: cursorElement });
+});
+
 const disconnect = () => { //socket disconnect
     socket.disconnect();
 }

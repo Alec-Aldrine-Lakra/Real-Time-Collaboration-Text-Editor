@@ -1,3 +1,4 @@
+`use strict`;
 const http = require('http');
 const express = require('express');
 const app = express();
@@ -22,85 +23,62 @@ app.use(require(path.join(__dirname,'../controller/account')))
 
 io.on('connection',(socket)=>{
     console.log(`User connected To Socket Id: ${socket.id}`);
+    
     socket.on('user',async (ob)=>{ //Adding the new user to online database
         let user = new Online({uid: ob.id, fname : ob.name, sid: socket.id});
         await user.save();
-        emitEverywhere();
     })
-    socket.on('disconnect',async ()=>{
-       let d = await Online.deleteOne({sid : socket.id});
-       console.log(d);
-       emitEverywhere();
-    })
-    /*socket.on('message',async (m,fname,fn)=>{ //fetching data to all other users connected
-        let s={}; //removing div and br tags 
-        let d = await Docs.findOne({name: fn},{_id:1});
-        if(d === null){ //Checking if the doc exists from before
-            let doc = new Docs({name:fn, content:m});
-            s = await doc.save();
-            if(s)
-                console.log('Doc Created');
-        }
-        else
-            await Docs.updateOne({name:fn},{content : m}); //updates the doc if it already exists
 
-        let user = await User.findOne({fname: fname},{_id:1}); //finding _id of user who is typing
-        let uid = user.id;
-        let did = s._id || d._id ;
-        let l = await Logs.findOne({did},{_id:1}); //getting the doc id
-        if(l===null){ //If document does not exist in the log
-            let log = new Logs({uid, did, sub_content:'Created the Document'}); //Creating the first log of document
-            await log.save();
-            console.log('Log Updated first time');
-        }
-        else{
-            let f = await Logs.find({did}).sort({ '_id' : -1 }).limit(1); //Finding the latest record
-            if(f[0].uid.equals(uid) && f[0].sub_content !== 'Created the Document') //If user just created the document and is editing
-                await Logs.updateOne({_id : f[0]._id},{sub_content : m});
-            else if (f[0].uid.equals(uid)==false){ //If different user is editing then add a new log
-                let log = new Logs({uid, did, sub_content:m});
-                await log.save();
-            }
-        }
-        emitLogs(did);
-        socket.broadcast.emit('message',m,fname,fn);
-    })*/
+    socket.on('disconnect',async ()=>{
+      let user = await Online.findOne({sid : socket.id},{_id:0, roomid : 1});
+      if(user.roomid)
+          emitToRoom(user.roomid)
+       await Online.deleteOne({sid : socket.id});
+    })
+
     socket.on('doc',async (v)=>{
         if(v.op==='open'){ //file open
-            let d = await Docs.findOne({name:v.doc},{_id:1});
-            if(d)
-                socket.emit('doc',d._id);
+            let d = await Docs.findOne({name:v.doc},{_id:1,content: 1});
+            if(d){
+                let roomid = d._id;
+                socket.join(roomid);
+                await Online.updateOne({sid : socket.id},{roomid});
+                socket.emit('doc',{id: d._id,content: d.content});
+                emitToRoom(roomid);
+            }
             else
-                socket.emit('err','File Does Not Exist');
+                socket.emit('message','Error : File Not Found');
         }
         else if(v.op==='create'){ //file create
             let d = await Docs.findOne({name:v.doc},{_id:1});
             if(d)
-                socket.emit('err','File Already Exists');
+                socket.emit('message','Error : File Already Exists');
             else{
                 let doc = new Docs({name: v.doc, created_by: v.id});
                 await doc.save();
                 let d = await Docs.findOne({name:v.doc},{_id:1});
-                socket.emit('doc',d._id);
+                let roomid = d._id;
+                socket.join(roomid);
+                await Online.updateOne({sid : socket.id},{roomid});
+                socket.emit('doc',{id: room, content: null});
+                emitToRoom(roomid);
             }
         }
     })
-});
 
-const emitEverywhere = async ()=>{
-    let users = await Online.find({},{_id:0,uid:1,fname:1})
-    console.log(users);
-}
+    socket.on('save',async(doc)=>{
+        await Docs.updateOne({_id : doc.id},{content : doc.text});
+        io.to(doc.id).emit('message','Document Saved');
+    })
 
-const emitLogs= async (did)=>{
-    let ls = await Logs.find({did},{_id:0,uid:1,sub_content:1});
-    let p=[], r = new RegExp('</*[a-zA-Z]*>','g'); //removing tags from the actual sub-content to display in log
-    for(let i=0; i<ls.length; i++){
-        let n = await User.findOne({_id:ls[i].uid},{_id:0,fname:1});
-        let exp =ls[i].sub_content.replace(r,'');
-        p.push({name : n.fname, content : exp}); //Pushing all the logs in the array
-    }
-    io.emit('logs',p);
+    socket.on('co-ordinates', (cd)=>{
+        socket.broadcast.emit('co-ordinates',cd);
+    })
+})
+
+const emitToRoom = async (rid)=>{
+    let users = await Online.find({roomid:rid},{_id:0,uid:1,fname:1});
+    io.to(rid).emit('users',users);
 }
 
 server.listen(creds.port,()=>{
