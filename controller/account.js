@@ -31,7 +31,6 @@ const redirectHome = (req,res, next)=>{
 		next();
 }
 router.get('/home',redirectLogin,(req,res)=>{
-    console.log(req.session.email)
     User.findOne({email: req.session.email},{_id:1, fname:1},(err,result)=>{
         if(err)
             res.redirect('/logout');

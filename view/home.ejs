@@ -3,7 +3,8 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-    <title>Online Editor</title>
+    <title>Collaboration Editor</title>
+    <link rel="stylesheet" href="/editstyle.css">
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
     <!-- Firebase -->
     <script src="https://www.gstatic.com/firebasejs/3.3.0/firebase.js"></script>
@@ -13,47 +14,15 @@
     <!-- Firepad -->
     <link rel="stylesheet" href="https://cdn.firebase.com/libs/firepad/1.4.0/firepad.css" />
     <script src="https://cdn.firebase.com/libs/firepad/1.4.0/firepad.min.js"></script>
-
-    <style>
-      body{
-        background: linear-gradient(to left, #dae2f8, #d6a4a4);
-      }
-      #firepad{
-         height: 400px;
-         display: none;
-         overflow: hidden;
-      }
-      a.powered-by-firepad {
-        visibility: hidden;
-      }
-      .CodeMirror-widget > span{
-        position: absolute;
-        border: 1px solid black;
-        border-radius: 3px;
-        color: white;
-        background-color: black;
-        font-size: 10px;
-        font-weight: 200;
-        margin-top : -9px;
-        margin-left : 20px;
-        visibility: visible;
-      }
-      .offline{
-        display:none;
-      }
-      .online{
-        display: inline;
-      }
-    </style>
   </head>
   <body>
     <div class="container">
       <nav class="navbar navbar-light">
-          <a class="navbar-brand" href="#">Alliance Editor</a> 
+          <a class="navbar-brand" href="#"><h3>Collaboration Editor</h3></a> 
           <a href="/logout"><img src="logout.svg"></a>    
       </nav>
     </div>
-    <br><br><br>
+    <br>
     <div class="container">
       <div class="row">
        <div class="col l6 m6 s12">
@@ -73,12 +42,12 @@
             <div id="firepad" name="<%=fname%>" uid="<%=id%>">
             </div>
          </div>
-         <div class="col col-sm-12 col-md-4 col-lg-3">
+         <div class="col col-sm-12 col-md-4 col-lg-3 offline">
            <br>
-            <div class="card sbg-white border-info rounded" style="overflow: hidden; height:250px;" class="offline">
+            <div class="card sbg-white border-info rounded" style="overflow: hidden; height:250px;">
                 <div class="card-header text-center">Users</div>
                 <div class="card-body">
-                    <ul class="list-group list-group-flush" id="users"  style="padding-left: 10px;">
+                    <ul id="users">
                     </ul>
                 </div>
             </div>

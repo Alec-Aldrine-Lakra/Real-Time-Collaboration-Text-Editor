@@ -6,7 +6,6 @@ const path = require('path');
 const server = http.createServer(app);
 const socket = require('socket.io');
 const Online = require('../model/online-model');
-const User = require('../model/user-model');
 const Docs = require('../model/docs-model');
 const Logs = require('../model/logs-model.js');
 const creds = require('../config/creds.json');
@@ -22,35 +21,42 @@ app.use(express.static(path.join(__dirname,'../public')));
 app.use(require(path.join(__dirname,'../controller/account')))
 
 io.on('connection',(socket)=>{
-    console.log(`User connected To Socket Id: ${socket.id}`);
-    
+    console.log(`User Connected To Socket Id: ${socket.id}`);  
     socket.on('user',async (ob)=>{ //Adding the new user to online database
         let user = new Online({uid: ob.id, fname : ob.name, sid: socket.id});
         await user.save();
     })
 
     socket.on('disconnect',async ()=>{
-      let user = await Online.findOne({sid : socket.id},{_id:0, roomid : 1});
-      if(user.roomid)
-          emitToRoom(user.roomid)
+      let user = await Online.findOne({sid : socket.id},{_id:0, fname:1, roomid : 1});
        await Online.deleteOne({sid : socket.id});
+       if(user.roomid){
+            socket.broadcast.to(user.roomid).emit('userleft',user); //old user left
+            let users = await Online.find({roomid: user.roomid},{_id:0,uid:1,fname:1});
+            socket.broadcast.to(user.roomid).emit('users',users);
+       }  
+       console.log(`User Disconnected At Socket Id: ${socket.id}`); 
     })
 
     socket.on('doc',async (v)=>{
         if(v.op==='open'){ //file open
-            let d = await Docs.findOne({name:v.doc},{_id:1,content: 1});
+            let d = await Docs.findOne({name:v.doc},{_id:1,content: 1}); //searching of file exists
             if(d){
                 let roomid = d._id;
                 socket.join(roomid);
                 await Online.updateOne({sid : socket.id},{roomid});
                 socket.emit('doc',{id: d._id,content: d.content});
-                emitToRoom(roomid);
+
+                let user =  await Online.findOne({sid : socket.id},{_id:0, fname: 1});
+                socket.broadcast.to(roomid).emit('userjoins',user); //new user 
+                let users = await Online.find({roomid},{_id:0,uid:1,fname:1});
+                io.to(roomid).emit('users',users); //sending everyone online user list to the user
             }
             else
                 socket.emit('message','Error : File Not Found');
         }
         else if(v.op==='create'){ //file create
-            let d = await Docs.findOne({name:v.doc},{_id:1});
+            let d = await Docs.findOne({name:v.doc},{_id:1}); //searching if file exists
             if(d)
                 socket.emit('message','Error : File Already Exists');
             else{
@@ -60,8 +66,13 @@ io.on('connection',(socket)=>{
                 let roomid = d._id;
                 socket.join(roomid);
                 await Online.updateOne({sid : socket.id},{roomid});
-                socket.emit('doc',{id: room, content: null});
-                emitToRoom(roomid);
+                socket.emit('doc',{id: roomid, content: null});
+
+
+                let user =  await Online.findOne({sid : socket.id},{_id:0, uid:1, fname: 1});
+                socket.broadcast.to(roomid).emit('userjoins',user); //new user joined
+                let users = await Online.find({roomid},{_id:0,uid:1,fname:1});
+                io.to(roomid).emit('users',users); //sending everyone online user list to the user
             }
         }
     })
@@ -71,15 +82,10 @@ io.on('connection',(socket)=>{
         io.to(doc.id).emit('message','Document Saved');
     })
 
-    socket.on('co-ordinates', (cd)=>{
-        socket.broadcast.emit('co-ordinates',cd);
+    socket.on('co-ordinates', ([rid , cd,c])=>{
+        socket.broadcast.to(rid).emit('co-ordinates',[cd,c]);
     })
 })
-
-const emitToRoom = async (rid)=>{
-    let users = await Online.find({roomid:rid},{_id:0,uid:1,fname:1});
-    io.to(rid).emit('users',users);
-}
 
 server.listen(creds.port,()=>{
     console.log(`Server started at port ${creds.port}`);

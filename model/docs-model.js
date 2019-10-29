@@ -7,7 +7,7 @@ const userSchema = new mongoose.Schema({
   },
   content:{
     type: String,
-    default: 'Doc Created'
+    default: ''
   },
   created_on:{
     type: Date, 
