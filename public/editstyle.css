@@ -1,0 +1,42 @@
+body{
+    background: linear-gradient(to left, #dae2f8, #d6a4a4);
+}
+#firepad{
+    height: 400px;
+    display: none;
+    overflow: hidden;
+    pointer-events: auto;
+}
+a.powered-by-firepad {
+    visibility: hidden;
+}
+.CodeMirror-widget > span{
+    position: absolute;
+    border-radius: 20%;
+    color: white;
+    font-size: 10px;
+    font-weight: 200;
+    margin-top : -10px;
+    margin-left : 20px;
+    z-index: 2;
+    padding: 2px;
+}
+.offline{
+    display:none;
+}
+.online{
+    display: inline;
+}
+ul{
+    list-style: none;
+}
+ul li::before {
+    content: "\2022";  /* Add content: \2022 is the CSS Code/unicode for a bullet */
+    color: #00a900; /* Change the color */
+    font-size: 30px;
+    font-weight: bold; /* If you want it to be bold */
+    display: inline-block; /* Needed to add space between the bullet and the text */
+    width: 1em;
+    margin-left: -2em;
+    padding-left: 5px;
+}
